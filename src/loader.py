@@ -1,4 +1,6 @@
 import os
+import json
+import csv
 from pathlib import Path
 from typing import List, Dict, Any
 
@@ -8,16 +10,33 @@ try:
 except ImportError:
     PYPDF_AVAILABLE = False
 
+from .config import SUPPORTED_EXTENSIONS
+
 
 def extract_text_from_file(file_path: Path) -> str:
     """
-    Extracts raw text from TXT, Markdown, or PDF files.
+    Extracts raw text from TXT, MD, PDF, Python code, JSON, and CSV files.
     """
     suffix = file_path.suffix.lower()
     
-    if suffix in [".txt", ".md"]:
+    if suffix in [".txt", ".md", ".py"]:
         with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
             return f.read()
+            
+    elif suffix == ".json":
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            try:
+                data = json.load(f)
+                return json.dumps(data, ensure_ascii=False, indent=2)
+            except Exception:
+                f.seek(0)
+                return f.read()
+                
+    elif suffix == ".csv":
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            reader = csv.reader(f)
+            rows = [", ".join(row) for row in reader]
+            return "\n".join(rows)
     
     elif suffix == ".pdf":
         if not PYPDF_AVAILABLE:
@@ -31,7 +50,7 @@ def extract_text_from_file(file_path: Path) -> str:
         return "\n".join(extracted_pages)
     
     else:
-        raise ValueError(f"Desteklenmeyen dosya formatı: {suffix}. Desteklenenler: .txt, .md, .pdf")
+        raise ValueError(f"Desteklenmeyen dosya formatı: {suffix}. Desteklenenler: {SUPPORTED_EXTENSIONS}")
 
 
 def split_text_into_chunks(
@@ -101,16 +120,15 @@ def load_and_chunk_all_documents(
     chunk_overlap: int = 80
 ) -> List[Dict[str, Any]]:
     """
-    Loads all .txt, .md, and .pdf documents from the target directory and chunks them.
+    Loads all supported documents from the target directory and chunks them.
     """
     all_chunks = []
-    supported_exts = {".txt", ".md", ".pdf"}
     
     if not directory.exists():
         return []
 
-    for file_path in directory.glob("*"):
-        if file_path.suffix.lower() in supported_exts:
+    for file_path in sorted(directory.glob("*")):
+        if file_path.suffix.lower() in SUPPORTED_EXTENSIONS:
             try:
                 content = extract_text_from_file(file_path)
                 file_chunks = split_text_into_chunks(

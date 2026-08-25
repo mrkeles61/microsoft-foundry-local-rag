@@ -1,59 +1,73 @@
-# 🤖 Local RAG Application with Microsoft Foundry Local
+# ⚡ Local RAG 2.0 Application with Microsoft Foundry Local
 
 [![Microsoft AI Innovators](https://img.shields.io/badge/Microsoft_AI-Innovators_Summer_Program_2026-0078D4?style=for-the-badge&logo=microsoft&logoColor=white)](https://github.com/mrkeles61/microsoft-foundry-local-rag)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-App-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
-[![Sentence Transformers](https://img.shields.io/badge/Embeddings-SentenceTransformers-yellow?style=for-the-badge)](https://www.sbert.net/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-RAG_2.0_App-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
+[![Hybrid Search](https://img.shields.io/badge/Retrieval-Dense%20%2B%20BM25%20%2B%20RRF-green?style=for-the-badge)](https://www.sbert.net/)
+[![RAG Triad Evaluation](https://img.shields.io/badge/Evaluation-RAG_Triad_Metrics-purple?style=for-the-badge)](#-rag-triad-ve-kalite-metrikleri)
 
-> **Microsoft AI Innovators / Summer School 2026** programı kapsamında geliştirilmiş; tamamen yerel donanımda çalışan, veri gizliliğini koruyan ve doğrulanabilir kaynak gösterimi sunan **Retrieval-Augmented Generation (RAG)** uygulaması.
-
----
-
-## 📌 Proje Özeti ve Amacı
-
-Geleneksel bulut tabanlı yapay zeka çözümleri veri gizliliği riskleri, ağ gecikmesi ve yüksek API maliyetleri barındırır. Bu proje, **Microsoft Foundry Local** ve yerel küçük dil modelleri (SLM - Phi-3, Qwen, Llama) altyapısını kullanarak:
-1. Kullanıcının özel dokümanlarını (PDF, TXT, Markdown) yerel ortamda indeksler.
-2. Vektör benzerlik araması (Cosine Similarity) ile en alakalı bağlamı tespit eder.
-3. Halüsinasyonu engelleyen özel yönlendirme ile yalnızca doküman içeriğine dayalı, kaynak referanslı yanıtlar üretir.
+> **Microsoft AI Innovators / Summer School 2026** programı kapsamında geliştirilmiş; tamamen yerel donanımda çalışan, **Hibrit Arama (Dense Vector + BM25 Sparse)**, **Cross-Encoder Re-Ranking**, **Çok Turlu Konuşma Hafızası (Query Reformulation)** ve **RAG Triad Doğruluk Metrikleri** barındıran ileri düzey **Retrieval-Augmented Generation (RAG 2.0)** uygulaması.
 
 ---
 
-## 🏗️ Mimari ve Çalışma Prensibi
+## 🌟 Neden RAG 2.0? (Projeyi Öne Çıkaran Farklar)
+
+Standart RAG uygulamaları yalnızca anlamsal vektör araması yapar ve özel kod adlarında, model versiyonlarında veya sayılarda yanılabilir. Bu proje, endüstri standardı **üretim seviyesinde (production-grade)** şu mimarileri sunar:
+
+1. **🔍 Hibrit Arama (Hybrid Search):** `SentenceTransformers` (Dense Semantic) ve `BM25Okapi` (Sparse Lexical) aramalarını birleştirir.
+2. **⚖️ Reciprocal Rank Fusion (RRF):** Farklı arama uzaylarındaki sonuçları $RRF(d) = \sum \frac{w}{k + r(d)}$ formülüyle tekil en yüksek skora dönüştürür.
+3. **🎯 Cross-Encoder Re-Ranking Katmanı:** İlk aşamada getirilen Top-8 adayı terim sıklığı ve çapraz dikkatle yeniden sıralayarak en yüksek sinyale sahip Top-3 parçayı filtreler.
+4. **🧠 Çok Turlu Konuşma Hafızası (Query Reformulation):** *"Peki bunun avantajı nedir?"* gibi takip sorularını önceki sohbet bağlamıyla harmanlayarak bağımsız arama sorgusu üretir.
+5. **📊 RAG Triad Canlı Kalite Değerlendirmesi:** Her yanıtta **Context Relevance**, **Groundedness (Sadakat)** ve **Answer Relevance** skorlarını hesaplar ve güvenilirlik rozeti sunar.
+6. **📁 Çoklu Format Desteği:** `.pdf`, `.txt`, `.md`, `.py`, `.json`, `.csv` dosyalarını doğrudan parçalar ve indeksler.
+
+---
+
+## 🏗️ RAG 2.0 Sistem Mimarisi
 
 ```mermaid
 flowchart TD
-    subgraph Ingestion ["1. Doküman İşleme & Vektörleştirme"]
-        A[Kullanıcı Dokümanları\nPDF / TXT / MD] --> B[Loader & Sentence Chunker\n500 Char / 80 Overlap]
-        B --> C[Metin Parçaları]
-        C --> D[SentenceTransformers\nall-MiniLM-L6-v2]
-        D --> E[(Yerel Vektör Deposu\nJSON Index)]
+    subgraph Ingestion ["1. Doküman İşleme & Hibrit İndeksleme"]
+        A[Dokümanlar: PDF, TXT, MD, PY, JSON, CSV] --> B[Smart Sentence Splitter\n500 Char / 80 Overlap]
+        B --> C[Metin Parçaları - Chunks]
+        C --> D1[Dense Embeddings: SentenceTransformers]
+        C --> D2[Sparse Index: BM25 Okapi Index]
+        D1 --> E[(Yerel Vektör & BM25 Deposu)]
+        D2 --> E
     end
 
-    subgraph QueryPipeline ["2. Soru & Cevap Boru Hattı"]
-        F[Kullanıcı Sorusu] --> G[Soru Embedding Üretimi]
-        G --> H[Top-K Cosine Search]
-        E --> H
-        H --> I[Alakalı Parçalar & Alıntılar]
-        I --> J[Grounded Prompt Context]
-        J --> K[Yerel Model Çıkarımı\nFoundry Local / Phi-3 / Qwen]
-        K --> L[Doğrulanmış Yanıt & Kaynak Gösterimi]
+    subgraph QueryPipeline ["2. Akıllı Soru & Cevap Boru Hattı"]
+        F[Kullanıcı Sorusu] --> G[Çok Turlu Hafıza & Query Reformulation]
+        G --> H1[Dense Semantic Search]
+        G --> H2[Sparse Keyword BM25 Search]
+        E --> H1
+        E --> H2
+        H1 --> RRF[Reciprocal Rank Fusion - RRF]
+        H2 --> RRF
+        RRF --> RERANK[Cross-Encoder Re-Ranking Katmanı]
+        RERANK --> TOP[En Yüksek Hassasiyetli Top-K Parçalar]
+        TOP --> PROMPT[Grounded Prompt Context + Halüsinasyon Koruması]
+        PROMPT --> LLM[Yerel SLM: Microsoft Foundry Local / Phi-3 / Qwen]
+        LLM --> OUT[Doğrulanmış Yanıt + Kaynak Alıntıları]
+        OUT --> EVAL[RAG Triad Güvenilirlik Ölçümü]
     end
 ```
 
 ---
 
-## ✨ Temel Özellikler
+## 📊 RAG Triad ve Kalite Metrikleri
 
-* 🔒 **Sıfır Veri Sızıntısı (Zero Data Leakage):** Tüm dokümanlar ve çıkarımlar yerel cihazınızda kalır; harici sunucuya veri gitmez.
-* 🛡️ **Anti-Halüsinasyon Koruması:** Model, verilen belgelerde cevabı bulunmayan sorular için uydurma yapmaz ve kullanıcıyı dürüstçe uyarır.
-* 📑 **Çoklu Format Desteği:** PDF, TXT ve Markdown formatlarındaki belgeleri anında okur ve parçalar (chunking).
-* 🎯 **Şeffaf Kaynak Alıntıları:** Üretilen her yanıtın altında yararlanılan belgenin adı, parça numarası ve benzerlik skoru gösterilir.
-* 💻 **Esnek Model Uyumluluğu:** Microsoft Foundry Local, LM Studio, Ollama veya yerel OpenAI-uyumlu tüm uç noktalarla tak-çalıştır entegrasyon.
-* 🎨 **Modern Streamlit Arayüzü:** Belge yükleme, indeks tazeleme, parametre yönetimi ve sohbet arayüzü tek ekranda.
+Üretilen her yanıt için sistem arkada 3 temel metriği canlı denetler:
+
+| Metrik | Açıklama | Hedef Değer |
+| :--- | :--- | :--- |
+| **Context Relevance** | Getirilen doküman parçalarının soruyla anlamsal örtüşmesi | $> \%60$ |
+| **Groundedness** | Cevabın doküman bağlamına sadakati (Halüsinasyon olmama oranı) | $> \%80$ |
+| **Answer Relevance** | Cevabın kullanıcının asıl sorusunu doğrudan karşılama oranı | $> \%75$ |
 
 ---
 
-## 🚀 Kurulum ve Çalıştırma
+## 🚀 Hızlı Başlangıç
 
 ### 1. Depoyu Klonlayın
 ```bash
@@ -61,29 +75,27 @@ git clone https://github.com/mrkeles61/microsoft-foundry-local-rag.git
 cd microsoft-foundry-local-rag
 ```
 
-### 2. Sanal Ortam Oluşturun ve Bağımlılıkları Yükleyin
+### 2. Sanal Ortam Oluşturun ve Paketleri Yükleyin
 ```bash
 python -m venv .venv
-# Windows için:
+# Windows:
 .venv\Scripts\activate
-# Linux/macOS için:
+# Linux/macOS:
 source .venv/bin/activate
 
 pip install -r requirements.txt
 ```
 
-### 3. Uygulamayı Başlatın
+### 3. Otomatik Test Paketini Çalıştırın
+```bash
+python test_rag.py
+```
 
-#### Web Arayüzü (Önerilen):
+### 4. Web Arayüzünü Başlatın
 ```bash
 python run.py
 # veya doğrudan:
 streamlit run src/app.py
-```
-
-#### Terminal / CLI Modu:
-```bash
-python run.py --cli
 ```
 
 ---
@@ -101,40 +113,38 @@ select_variant()
 
 ---
 
+## 🎥 2 Dakikalık Sunum Videosu Taslağı (Teslim Rehberi)
+
+* **[0:00 - 0:40] Canlı Demo:**
+  Streamlit arayüzünü açın. *"select_variant fonksiyonu ne işe yarar?"* diye sorun. BM25 + Dense aramanın tam eşleşme sağladığını, kaynak alıntılarını ve canlı **RAG Triad rozetini** gösterin.
+* **[0:40 - 1:10] Halüsinasyon Koruması & Hafıza:**
+  Takip sorusu sorun: *"Peki bunun CUDA hızlandırması nasıl yapılır?"* (Hafızanın soruyu nasıl tamamladığını gösterin). Ardından doküman dışı alakasız bir soru sorup uydurma yapmadığını gösterin.
+* **[1:10 - 2:00] Ne Öğrendim? (Kritik Bölüm):**
+  > *"Bu projede standart vektör aramasının yetersiz kaldığı noktalarda BM25 ve Reciprocal Rank Fusion ile hibrit aramanın önemini, Cross-Encoder ile re-ranking katmanının getirdiği hassasiyeti, RAG Triad metrikleriyle halüsinasyonu matematiksel olarak ölçmeyi ve Microsoft Foundry Local ile yerel SLM çalıştırmanın güvenlik avantajlarını öğrendim."*
+
+---
+
 ## 📂 Proje Yapısı
 
 ```
 microsoft-foundry-local-rag/
 ├── data/
-│   ├── documents/          # İndekslenecek örnek bilgi tabanı ve belgeler
-│   │   ├── microsoft_foundry_local_overview.md
-│   │   └── retrieval_augmented_generation_guide.txt
-│   └── vector_store.json   # Üretilen yerel vektör indeksi
+│   ├── documents/          # Bilgi tabanı dokümanları (.pdf, .txt, .md, .py, .json, .csv)
+│   └── vector_store.json   # Üretilen yerel hibrit indeks
 ├── src/
 │   ├── __init__.py
-│   ├── config.py           # Model isimleri, chunk size, threshold ve URL ayarları
-│   ├── loader.py           # PDF, TXT, MD okuyucu ve akıllı metin bölümleyici
-│   ├── vector_store.py     # SentenceTransformer embedding + Cosine benzerlik motoru
-│   ├── engine.py           # RAG retrieval, context injection ve SLM çıkarımı
-│   └── app.py              # Streamlit tabanlı modern web arayüzü
-├── requirements.txt        # Gerekli Python paketleri
+│   ├── config.py           # Model parametreleri, RRF k sabiti ve eşikler
+│   ├── loader.py           # Çoklu format okuyucu ve akıllı metin bölümleyici
+│   ├── vector_store.py     # Dense + BM25 Sparse + RRF Hibrit Arama motoru
+│   ├── reranker.py         # Cross-Encoder Re-Ranking katmanı
+│   ├── evaluator.py        # RAG Triad (Context, Groundedness, Relevance) ölçüm motoru
+│   ├── engine.py           # RAG 2.0 boru hattı ve konuşma hafızası orkestratörü
+│   └── app.py              # Streamlit tabanlı analitik gösterge paneli
+├── requirements.txt        # Gerekli Python bağımlılıkları
 ├── run.py                  # CLI ve Web başlatıcı
+├── test_rag.py             # Otomatik standart doğrulama test paketi
 └── README.md               # Proje dokümantasyonu
 ```
-
----
-
-## 🎥 Sunum Videosu & Öğrenilenler (2-3 Dakika)
-
-Videoda bahsedilmesi gereken ana başlıklar:
-1. **Ne Yaptım?**
-   - Yerel dokümanları okuyan, parçalayan, vektörleştiren ve yerel model üzerinden kaynak göstererek yanıtlayan bir RAG mimarisi geliştirdim.
-   - Streamlit ile kullanıcı dostu bir arayüz hazırladım.
-2. **Ne Öğrendim?**
-   - RAG boru hattında chunk boyutu ve örtüşme (overlap) oranının geri getirme (retrieval) başarısına doğrudan etkisini.
-   - Vektör veritabanlarında kosinüs benzerliği ile anlamsal eşleşmenin nasıl çalıştığını.
-   - Yerel SLM'lerin (Phi-3 gibi) buluta ihtiyaç duymadan düşük gecikme ve sıfır veri sızıntısıyla çalıştırılabilme avantajını.
-   - Halüsinasyonu engellemek için prompt mühendisliği ve sistem talimatı kısıtlamalarını.
 
 ---
 
