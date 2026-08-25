@@ -1,0 +1,17 @@
+RETRIEVAL-AUGMENTED GENERATION (RAG) TEMEL İLKELERİ VE MİMARİSİ
+
+1. RAG NEDİR?
+Retrieval-Augmented Generation (RAG), büyük dil modellerinin (LLM) statik eğitim verisiyle sınırlı kalmasını engelleyen ve modele harici, güncel veya özel dokümanlardan dinamik bilgi sağlayan bir mimaridir.
+
+2. RAG ADIMLARI
+Bir RAG boru hattı (pipeline) temel olarak 4 aşamadan oluşur:
+- Ingestion & Chunking (Yükleme ve Bölümleme): Büyük PDF, TXT veya MD dokümanları mantıklı karakter bloklarına (örneğin 500 karakter) ve hafif örtüşme (overlap) ile parçalanır.
+- Embedding (Vektörleştirme): SentenceTransformers gibi embedding modelleri ile metin parçaları yüzlerce boyutlu yoğun vektörlere dönüştürülür.
+- Retrieval (Getirme): Kullanıcı bir soru sorduğunda, soru da vektörleştirilir ve Cosine Similarity (Kosinüs Benzerliği) ile en yakın Top-K parça tespit edilir.
+- Generation & Grounding (Üretim ve Doğrulama): Tespit edilen parçalar sistem istemine (prompt context) eklenir ve modelden yalnızca bu bağlama dayanarak yanıt üretmesi istenir.
+
+3. HALÜSİNASYONUN ENGELLENMESİ
+RAG mimarisinin en büyük avantajı halüsinasyon riskini minimize etmesidir. Model sistem talimatında "Verilen bağlamda bilgi yoksa uydurma yapma" şeklinde sınırlandırıldığında, yanıtların güvenilirliği ve kurumsal doğrulanabilirliği %100'e yaklaşır.
+
+4. KAYNAK GÖSTERİMİ (CITATIONS)
+Her üretilen cevabın altında ilgili doküman adı, parça indeksi ve benzerlik yüzdesi belirtilerek kullanıcıya alıntıların şeffaf denetimi sunulur.
