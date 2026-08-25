@@ -3,6 +3,13 @@ import os
 import argparse
 from pathlib import Path
 
+# Enable UTF-8 encoding for Windows console
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 # Add project root to sys.path
 BASE_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(BASE_DIR))
@@ -15,7 +22,7 @@ from src.engine import RAGEngine
 
 def run_cli():
     print("=" * 60)
-    print("🤖 Local RAG with Foundry Local - Terminal Modu")
+    print("Local RAG with Foundry Local - Terminal Modu")
     print("=" * 60)
     
     # Initialize vector store
@@ -28,18 +35,18 @@ def run_cli():
         store.load(VECTOR_STORE_PATH)
         
     engine = RAGEngine(vector_store=store)
-    print("\n✅ RAG Motoru hazır! Çıkmak için 'q' veya 'exit' yazabilirsiniz.\n")
+    print("\n[OK] RAG Motoru hazir! Cikmak icin 'q' veya 'exit' yazabilirsiniz.\n")
 
     while True:
         try:
-            query = input("\n📝 Sorunuz: ").strip()
+            query = input("\nSorunuz: ").strip()
             if not query:
                 continue
             if query.lower() in ["q", "exit", "quit"]:
-                print("Çıkılıyor...")
+                print("Cikiliyor...")
                 break
 
-            print("\n⏳ Yanıt aranıyor...\n")
+            print("\nYanit araniyor...\n")
             result = engine.query(query)
             
             print("--- CEVAP ---")
@@ -48,18 +55,18 @@ def run_cli():
             if result.get("sources"):
                 print("\n--- KAYNAKLAR ---")
                 for i, src in enumerate(result["sources"]):
-                    print(f"[{i+1}] Belge: {src['doc_name']} (Parça #{src['chunk_index']} | Benzerlik: %{src['score']*100:.1f})")
+                    print(f"[{i+1}] Belge: {src['doc_name']} (Parca #{src['chunk_index']} | Benzerlik: %{src['score']*100:.1f})")
             print("-" * 50)
 
         except KeyboardInterrupt:
-            print("\nÇıkış yapıldı.")
+            print("\nCikis yapildi.")
             break
 
 
 def run_web():
     app_path = BASE_DIR / "src" / "app.py"
     cmd = f'streamlit run "{app_path}"'
-    print(f"🚀 Streamlit arayüzü başlatılıyor: {cmd}")
+    print(f"[LAUNCH] Streamlit arayuzu baslatiliyor: {cmd}")
     os.system(cmd)
 
 
