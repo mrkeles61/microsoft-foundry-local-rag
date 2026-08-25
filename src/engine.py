@@ -123,11 +123,23 @@ class RAGEngine:
         return self._local_synthesizer(user_question, retrieved_chunks)
 
     def _local_synthesizer(self, user_question: str, retrieved_chunks: List[Any]) -> str:
-        """Fallback grounded response synthesizer when external LLM server is disconnected."""
+        """
+        Fallback grounded response synthesizer when external LLM server is disconnected.
+        Ensures strict grounding and checks question keyword overlap before responding.
+        """
         top_chunk, score = retrieved_chunks[0]
         doc = top_chunk.get("doc_name", "Belge")
         text = top_chunk.get("text", "")
         
+        # Keyword relevance check against retrieved text
+        q_words = [w.lower() for w in user_question.replace("?", "").replace(".", "").split() if len(w) > 3]
+        text_lower = text.lower()
+        matched_words = [w for w in q_words if w in text_lower]
+
+        # If none of the meaningful question words exist in the chunk, treat as ungrounded
+        if len(q_words) > 0 and len(matched_words) == 0 and score < 0.65:
+            return "Verilen dokümanlarda bu soruya ilişkin yeterli veya doğrulanmış bilgi bulunmamaktadır."
+
         lines = [line.strip() for line in text.split("\n") if line.strip()]
         relevant_lines = lines[:4] if len(lines) >= 4 else lines
         extracted_content = " ".join(relevant_lines)
@@ -144,3 +156,4 @@ class RAGEngine:
             response += f"\n*Ayrıca `{doc2}` belgesinde de tamamlayıcı bilgiler tespit edildi.*"
 
         return response
+
