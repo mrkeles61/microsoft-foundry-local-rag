@@ -1,6 +1,7 @@
 import sys
 import os
 import argparse
+import subprocess
 from pathlib import Path
 
 # Enable UTF-8 encoding for Windows console
@@ -64,10 +65,8 @@ def run_cli():
 
 def run_web():
     app_path = BASE_DIR / "src" / "app.py"
-    # Use active Python interpreter to invoke streamlit module directly
-    cmd = f'"{sys.executable}" -m streamlit run "{app_path}"'
-    print(f"[LAUNCH] Streamlit arayuzu baslatiliyor: {cmd}")
-    os.system(cmd)
+    print(f"[LAUNCH] Streamlit arayuzu baslatiliyor: {app_path}")
+    subprocess.run([sys.executable, "-m", "streamlit", "run", str(app_path)])
 
 
 if __name__ == "__main__":
