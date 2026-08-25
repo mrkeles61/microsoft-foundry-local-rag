@@ -25,7 +25,6 @@ def run_cli():
     print("Local RAG with Foundry Local - Terminal Modu")
     print("=" * 60)
     
-    # Initialize vector store
     store = LocalVectorStore(store_path=VECTOR_STORE_PATH)
     if not VECTOR_STORE_PATH.exists():
         print(f"[CLI] Dokümanlar taranıyor: {DOCUMENTS_DIR}")
@@ -65,7 +64,8 @@ def run_cli():
 
 def run_web():
     app_path = BASE_DIR / "src" / "app.py"
-    cmd = f'streamlit run "{app_path}"'
+    # Use active Python interpreter to invoke streamlit module directly
+    cmd = f'"{sys.executable}" -m streamlit run "{app_path}"'
     print(f"[LAUNCH] Streamlit arayuzu baslatiliyor: {cmd}")
     os.system(cmd)
 
