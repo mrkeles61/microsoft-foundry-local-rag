@@ -1,29 +1,40 @@
-# ⚡ Local RAG 2.0 Application with Microsoft Foundry Local
+# ⚡ Multi-Agent Local RAG Ultra with Microsoft Foundry Local
 
 [![Microsoft AI Innovators](https://img.shields.io/badge/Microsoft_AI-Innovators_Summer_Program_2026-0078D4?style=for-the-badge&logo=microsoft&logoColor=white)](https://github.com/mrkeles61/microsoft-foundry-local-rag)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-RAG_2.0_App-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-Multi--Agent_App-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![Hybrid Search](https://img.shields.io/badge/Retrieval-Dense%20%2B%20BM25%20%2B%20RRF-green?style=for-the-badge)](https://www.sbert.net/)
-[![RAG Triad Evaluation](https://img.shields.io/badge/Evaluation-RAG_Triad_Metrics-purple?style=for-the-badge)](#-rag-triad-ve-kalite-metrikleri)
+[![Multi-Agent Intent Router](https://img.shields.io/badge/Architecture-Multi--Agent_Router-orange?style=for-the-badge)](#-çok-ajanlı-mimari)
+[![Knowledge Graph](https://img.shields.io/badge/Ontology-Knowledge_Graph-blueviolet?style=for-the-badge)](#-interaktif-bilgi-grafigi)
 
-> **Microsoft AI Innovators / Summer School 2026** programı kapsamında geliştirilmiş; tamamen yerel donanımda çalışan, **Hibrit Arama (Dense Vector + BM25 Sparse)**, **Cross-Encoder Re-Ranking**, **Çok Turlu Konuşma Hafızası (Query Reformulation)** ve **RAG Triad Doğruluk Metrikleri** barındıran ileri düzey **Retrieval-Augmented Generation (RAG 2.0)** uygulaması.
-
----
-
-## 🌟 Neden RAG 2.0? (Projeyi Öne Çıkaran Farklar)
-
-Standart RAG uygulamaları yalnızca anlamsal vektör araması yapar ve özel kod adlarında, model versiyonlarında veya sayılarda yanılabilir. Bu proje, endüstri standardı **üretim seviyesinde (production-grade)** şu mimarileri sunar:
-
-1. **🔍 Hibrit Arama (Hybrid Search):** `SentenceTransformers` (Dense Semantic) ve `BM25Okapi` (Sparse Lexical) aramalarını birleştirir.
-2. **⚖️ Reciprocal Rank Fusion (RRF):** Farklı arama uzaylarındaki sonuçları $RRF(d) = \sum \frac{w}{k + r(d)}$ formülüyle tekil en yüksek skora dönüştürür.
-3. **🎯 Cross-Encoder Re-Ranking Katmanı:** İlk aşamada getirilen Top-8 adayı terim sıklığı ve çapraz dikkatle yeniden sıralayarak en yüksek sinyale sahip Top-3 parçayı filtreler.
-4. **🧠 Çok Turlu Konuşma Hafızası (Query Reformulation):** *"Peki bunun avantajı nedir?"* gibi takip sorularını önceki sohbet bağlamıyla harmanlayarak bağımsız arama sorgusu üretir.
-5. **📊 RAG Triad Canlı Kalite Değerlendirmesi:** Her yanıtta **Context Relevance**, **Groundedness (Sadakat)** ve **Answer Relevance** skorlarını hesaplar ve güvenilirlik rozeti sunar.
-6. **📁 Çoklu Format Desteği:** `.pdf`, `.txt`, `.md`, `.py`, `.json`, `.csv` dosyalarını doğrudan parçalar ve indeksler.
+> **Microsoft AI Innovators / Summer School 2026** programı için geliştirilmiş; tamamen yerel donanımda çalışan, **Çok Ajanlı Niyet Yönlendirici (Multi-Agent Intent Router)**, **Hibrit Arama (Dense + BM25 + RRF)**, **Cross-Encoder Re-Ranking**, **İnteraktif Bilgi Grafiği (Knowledge Graph)**, **Otomatik Doküman Özeti & Karşılaştırma** ve **Canlı Benchmark Test Merkezi** barındıran üst düzey **Multi-Agent RAG Ultra** uygulaması.
 
 ---
 
-## 🏗️ RAG 2.0 Sistem Mimarisi
+## 🌟 Neden RAG Ultra? (Projeyi Zirveye Taşıyan Farklar)
+
+1. **🤖 Çok Ajanlı Niyet Yönlendirici (Multi-Agent Intent Router):**
+   * Kullanıcının sorduğu sorunun türünü analiz eder ve 4 uzman ajandan birini dinamik olarak görevlendirir:
+     - 🛠️ **Teknik & Mimari Ajanı:** Kod, API ve CUDA optimizasyonu analizleri.
+     - 📋 **Yönetici Özeti Ajanı:** Üst düzey iş ve yönetici özetleri.
+     - 🔬 **Derin Araştırma Ajanı:** Çok adımlı çapraz doküman sentezi.
+     - 💡 **Doğrulanmış Bilgi Ajanı:** Hızlı ve kesin olgusal soru-cevap.
+2. **🔍 Hibrit Arama (Hybrid Search: Dense + BM25 + RRF):**
+   * Anlamsal vektörler (`SentenceTransformers`) ile anahtar kelime indeksini (`BM25Okapi`) birleştirerek hem kavramsal soruları hem de özel kod fonksiyonlarını (`select_variant`, `download_and_register_eps`) tam isabetle yakalar.
+3. **🎯 Cross-Encoder Re-Ranking Katmanı:**
+   * Getirilen aday parçaları çapraz dikkat ve terim yoğunluğu ile yeniden puanlayarak en yüksek sinyale sahip parçaları filtreler.
+4. **📑 Doküman Zekası & Karşılaştırma (Document Intelligence):**
+   * Yüklenen herhangi bir belge için tek tıkla **Yönetici Özeti** çıkarır; iki farklı belgeyi **Karşılaştırmalı Tablo** halinde analiz eder.
+5. **🕸️ İnteraktif Bilgi Grafiği (Knowledge Graph):**
+   * Doküman havuzundaki varlıkları, SLM modellerini ve optimizasyon ilişkilerini görsel bir kavram haritasına dönüştürür.
+6. **📊 Canlı RAG Triad Benchmark Test Merkezi:**
+   * Context Relevance, Groundedness (Sadakat) ve Answer Relevance metriklerini web arayüzünden tek tıkla ölçer ve raporlar.
+7. **⚡ 1-Tık Kullanım Kolaylığı:**
+   * Hazır soru hapları (Pills) ile tek tıkla canlı sorgulama ve Markdown araştırma raporu indirme.
+
+---
+
+## 🏗️ Multi-Agent RAG Ultra Mimarisi
 
 ```mermaid
 flowchart TD
@@ -36,34 +47,27 @@ flowchart TD
         D2 --> E
     end
 
-    subgraph QueryPipeline ["2. Akıllı Soru & Cevap Boru Hattı"]
-        F[Kullanıcı Sorusu] --> G[Çok Turlu Hafıza & Query Reformulation]
-        G --> H1[Dense Semantic Search]
-        G --> H2[Sparse Keyword BM25 Search]
+    subgraph MultiAgentCore ["2. Çok Ajanlı Karar & Yönlendirme Katmanı"]
+        Q[Kullanıcı Sorusu] --> R[Intent Router Ajanı]
+        R -->|Teknik Kod| AG1[🛠️ Teknik & Mimari Ajanı]
+        R -->|Özet Talebi| AG2[📋 Yönetici Özeti Ajanı]
+        R -->|Karşılaştırma/Derin| AG3[🔬 Derin Araştırma Ajanı]
+        R -->|Genel Bilgi| AG4[💡 Doğrulanmış Bilgi Ajanı]
+    end
+
+    subgraph RetrievalLayer ["3. Hibrit Getirme & Re-Ranking"]
+        AG1 & AG2 & AG3 & AG4 --> H1[Dense Semantic Search]
+        AG1 & AG2 & AG3 & AG4 --> H2[Sparse BM25 Search]
         E --> H1
         E --> H2
         H1 --> RRF[Reciprocal Rank Fusion - RRF]
         H2 --> RRF
-        RRF --> RERANK[Cross-Encoder Re-Ranking Katmanı]
-        RERANK --> TOP[En Yüksek Hassasiyetli Top-K Parçalar]
-        TOP --> PROMPT[Grounded Prompt Context + Halüsinasyon Koruması]
+        RRF --> RERANK[Cross-Encoder Re-Ranking]
+        RERANK --> PROMPT[Grounded Prompt Context + Halüsinasyon Koruması]
         PROMPT --> LLM[Yerel SLM: Microsoft Foundry Local / Phi-3 / Qwen]
-        LLM --> OUT[Doğrulanmış Yanıt + Kaynak Alıntıları]
-        OUT --> EVAL[RAG Triad Güvenilirlik Ölçümü]
+        LLM --> OUT[Doğrulanmış Yanıt + Kaynak Alıntıları + RAG Triad Metrikleri]
     end
 ```
-
----
-
-## 📊 RAG Triad ve Kalite Metrikleri
-
-Üretilen her yanıt için sistem arkada 3 temel metriği canlı denetler:
-
-| Metrik | Açıklama | Hedef Değer |
-| :--- | :--- | :--- |
-| **Context Relevance** | Getirilen doküman parçalarının soruyla anlamsal örtüşmesi | $> \%60$ |
-| **Groundedness** | Cevabın doküman bağlamına sadakati (Halüsinasyon olmama oranı) | $> \%80$ |
-| **Answer Relevance** | Cevabın kullanıcının asıl sorusunu doğrudan karşılama oranı | $> \%75$ |
 
 ---
 
@@ -86,7 +90,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 3. Otomatik Test Paketini Çalıştırın
+### 3. Otomatik Doğrulama Testlerini Çalıştırın
 ```bash
 python test_rag.py
 ```
@@ -113,14 +117,16 @@ select_variant()
 
 ---
 
-## 🎥 2 Dakikalık Sunum Videosu Taslağı (Teslim Rehberi)
+## 🎥 2-3 Dakikalık Video Sunum Rehberi (Teslim İçin)
 
-* **[0:00 - 0:40] Canlı Demo:**
-  Streamlit arayüzünü açın. *"select_variant fonksiyonu ne işe yarar?"* diye sorun. BM25 + Dense aramanın tam eşleşme sağladığını, kaynak alıntılarını ve canlı **RAG Triad rozetini** gösterin.
-* **[0:40 - 1:10] Halüsinasyon Koruması & Hafıza:**
-  Takip sorusu sorun: *"Peki bunun CUDA hızlandırması nasıl yapılır?"* (Hafızanın soruyu nasıl tamamladığını gösterin). Ardından doküman dışı alakasız bir soru sorup uydurma yapmadığını gösterin.
-* **[1:10 - 2:00] Ne Öğrendim? (Kritik Bölüm):**
-  > *"Bu projede standart vektör aramasının yetersiz kaldığı noktalarda BM25 ve Reciprocal Rank Fusion ile hibrit aramanın önemini, Cross-Encoder ile re-ranking katmanının getirdiği hassasiyeti, RAG Triad metrikleriyle halüsinasyonu matematiksel olarak ölçmeyi ve Microsoft Foundry Local ile yerel SLM çalıştırmanın güvenlik avantajlarını öğrendim."*
+* **[0:00 - 0:40] Canlı Demo & Tek Tık Kolaylığı:**
+  Streamlit arayüzünü açın. Hazır soru butonlarından birine tıklayın (örn: *"select_variant Fonksiyonu"*). Niyet yönlendiricinin **🛠️ Teknik Ajanı** nasıl atadığını, BM25+Dense hibrit aramanın tam kod eşleşmesini ve açılır kutudaki kaynak alıntılarını gösterin.
+* **[0:40 - 1:15] Doküman Zekası & Bilgi Grafiği:**
+  *Doküman Zekası* sekmesinden tek tıkla **Yönetici Özeti** çıkarma ve iki dokümanı karşılaştırma özelliğini gösterin. Ardından *Bilgi Grafiği* sekmesindeki kavram haritasını gösterin.
+* **[1:15 - 1:40] Canlı Benchmark & Halüsinasyon Koruması:**
+  *Benchmark* sekmesine gelip testleri başlatın ve doğrulanmış kalite skorlarını gösterin. Doküman dışı bir soruda modelin dürüstçe *"bilgi bulunamadı"* dediğini belirtin.
+* **[1:40 - 2:30] Ne Öğrendim? (En Kritik Bölüm):**
+  > *"Bu projede standart RAG yapılarının ötesine geçerek; BM25 ve Reciprocal Rank Fusion ile hibrit arama mimarisini, çok ajanlı niyet yönlendirmeyi (Intent Routing), Cross-Encoder ile re-ranking katmanının doğruluğa etkisini, RAG Triad metrikleriyle halüsinasyonu matematiksel olarak denetlemeyi ve Microsoft Foundry Local ile tamamen güvenli, yerel SLM çalıştırmayı öğrendim."*
 
 ---
 
@@ -138,7 +144,13 @@ microsoft-foundry-local-rag/
 │   ├── vector_store.py     # Dense + BM25 Sparse + RRF Hibrit Arama motoru
 │   ├── reranker.py         # Cross-Encoder Re-Ranking katmanı
 │   ├── evaluator.py        # RAG Triad (Context, Groundedness, Relevance) ölçüm motoru
-│   ├── engine.py           # RAG 2.0 boru hattı ve konuşma hafızası orkestratörü
+│   ├── graph_visualizer.py # İnteraktif Bilgi Grafiği üreteci
+│   ├── agents/             # Çok Ajanlı Mimari Modülü
+│   │   ├── __init__.py
+│   │   ├── router.py       # Niyet Sınıflandırma ve Dinamik Ajan Yönlendirici
+│   │   ├── summarizer.py   # Doküman Zekası ve Karşılaştırma Ajanı
+│   │   └── deep_research.py# Çok adımlı Derin Araştırma Ajanı
+│   ├── engine.py           # Multi-Agent RAG orkestrasyon motoru
 │   └── app.py              # Streamlit tabanlı analitik gösterge paneli
 ├── requirements.txt        # Gerekli Python bağımlılıkları
 ├── run.py                  # CLI ve Web başlatıcı

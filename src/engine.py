@@ -7,6 +7,7 @@ from typing import List, Dict, Any, Optional
 from .vector_store import LocalVectorStore
 from .reranker import LocalReranker
 from .evaluator import RAGEvaluator
+from .agents.router import IntentRouter, QueryIntent
 from .config import (
     DEFAULT_LOCAL_ENDPOINT,
     DEFAULT_MODEL_NAME,
@@ -21,7 +22,7 @@ from .config import (
 )
 
 
-SYSTEM_PROMPT_TEMPLATE = """Sen kullanıcının yerel doküman havuzuna dayalı olarak sorularını yanıtlayan akıllı bir RAG (Retrieval-Augmented Generation) asistanısın.
+SYSTEM_PROMPT_TEMPLATE = """{persona_prompt}
 
 GÖREVİN VE KESİN KURALLARIN:
 1. YALNIZCA aşağıda verilen [BAĞLAM (CONTEXT)] içerisindeki doğrulanmış bilgilere dayanarak yanıt ver.
@@ -36,12 +37,13 @@ GÖREVİN VE KESİN KURALLARIN:
 
 class RAGEngine:
     """
-    Production RAG 2.0 Orchestration Engine:
-    1. Multi-turn Contextual Query Reformulation
-    2. Hybrid Retrieval (Dense Vector + BM25 Sparse + RRF)
-    3. Cross-Encoder Re-Ranking Precision Layer
-    4. Grounded Context Injection & Local SLM/LLM Inference
-    5. RAG Triad & Confidence Score Evaluation
+    Multi-Agent RAG 2.0 Orchestration Engine:
+    1. Multi-Agent Intent Routing (Technical / Executive / Deep Research / Grounded QA)
+    2. Multi-turn Contextual Query Reformulation
+    3. Hybrid Retrieval (Dense Vector + BM25 Sparse + RRF)
+    4. Cross-Encoder Re-Ranking Precision Layer
+    5. Grounded Context Injection & Local SLM/LLM Inference
+    6. RAG Triad & Confidence Score Evaluation
     """
     def __init__(
         self,
@@ -62,17 +64,12 @@ class RAGEngine:
         self.similarity_threshold = similarity_threshold
         self.reranker = LocalReranker(top_n=top_k)
         self.evaluator = RAGEvaluator()
+        self.router = IntentRouter()
 
     def reformulate_query(self, user_question: str, history: List[Dict[str, str]]) -> str:
-        """
-        Contextual Query Reformulation:
-        If user asks a follow-up question referencing pronouns or context ('Peki bunun avantajları neler?'),
-        reformulates it into a standalone search query using prior conversation context.
-        """
         if not history:
             return user_question
 
-        # Extract previous user queries
         prev_queries = [m["content"] for m in history if m.get("role") == "user"]
         if prev_queries:
             last_query = prev_queries[-1]
@@ -86,18 +83,21 @@ class RAGEngine:
 
     def query(self, user_question: str, history: List[Dict[str, str]] = None) -> Dict[str, Any]:
         """
-        Executes the complete RAG 2.0 pipeline.
+        Executes the complete Multi-Agent RAG pipeline.
         """
         start_time = time.time()
 
-        # Step 1: Query Reformulation
+        # Step 1: Intent Routing
+        intent, intent_info = self.router.route(user_question)
+
+        # Step 2: Query Reformulation
         standalone_query = self.reformulate_query(user_question, history or [])
 
-        # Step 2: Hybrid Retrieval (Dense + BM25 + RRF)
-        candidate_k = INITIAL_RETRIEVAL_K if RERANKING_ENABLED else self.top_k
+        # Step 3: Hybrid Retrieval (Dense + BM25 + RRF)
+        retrieval_k = INITIAL_RETRIEVAL_K * intent_info.get("top_k_multiplier", 1)
         candidates = self.vector_store.hybrid_search(
             query=standalone_query,
-            top_k=candidate_k,
+            top_k=retrieval_k,
             threshold=self.similarity_threshold
         )
 
@@ -110,16 +110,17 @@ class RAGEngine:
                 "context": "",
                 "latency_seconds": round(time.time() - start_time, 2),
                 "evaluation": eval_metrics,
+                "intent_info": intent_info,
                 "reformulated_query": standalone_query
             }
 
-        # Step 3: Precision Re-Ranking
+        # Step 4: Precision Re-Ranking
         if RERANKING_ENABLED:
             retrieved = self.reranker.rerank(standalone_query, candidates)
         else:
             retrieved = candidates[:self.top_k]
 
-        # Step 4: Build Structured Grounded Context
+        # Step 5: Build Structured Grounded Context
         context_parts = []
         sources = []
         retrieval_scores = []
@@ -142,12 +143,15 @@ class RAGEngine:
             })
 
         formatted_context = "\n\n".join(context_parts)
-        system_prompt = SYSTEM_PROMPT_TEMPLATE.format(context=formatted_context)
+        system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
+            persona_prompt=intent_info.get("persona_prompt", "Sen yardımcı bir RAG asistanısın."),
+            context=formatted_context
+        )
 
-        # Step 5: Local Model Inference
+        # Step 6: Local Model Inference
         answer = self._generate_answer(system_prompt, standalone_query, retrieved)
 
-        # Step 6: RAG Triad Evaluation
+        # Step 7: RAG Triad Evaluation
         eval_metrics = self.evaluator.evaluate(
             query=standalone_query,
             retrieved_context=formatted_context,
@@ -164,11 +168,11 @@ class RAGEngine:
             "context": formatted_context,
             "latency_seconds": latency,
             "evaluation": eval_metrics,
+            "intent_info": intent_info,
             "reformulated_query": standalone_query
         }
 
     def _generate_answer(self, system_prompt: str, user_question: str, retrieved_chunks: List[Any]) -> str:
-        """Invokes local endpoint or embedded synthesizer."""
         payload = {
             "model": self.model_name,
             "messages": [
@@ -195,20 +199,14 @@ class RAGEngine:
         return self._local_synthesizer(user_question, retrieved_chunks)
 
     def _local_synthesizer(self, user_question: str, retrieved_chunks: List[Any]) -> str:
-        """
-        Fallback grounded response synthesizer when external LLM server is disconnected.
-        Ensures strict grounding and checks question stem overlap before responding.
-        """
         top_chunk, score = retrieved_chunks[0]
         doc = top_chunk.get("doc_name", "Belge")
         text = top_chunk.get("text", "")
         
-        # Word stem matching (subwords of length >= 3)
         q_stems = [w[:4].lower() for w in re.findall(r"\w+", user_question) if len(w) >= 3]
         text_lower = text.lower()
         matched_stems = [s for s in q_stems if s in text_lower]
 
-        # If question has zero stem overlap and low semantic similarity, declare unknown
         if len(q_stems) > 0 and len(matched_stems) == 0 and score < 0.50:
             return "Verilen dokümanlarda bu soruya ilişkin yeterli veya doğrulanmış bilgi bulunmamaktadır."
 
